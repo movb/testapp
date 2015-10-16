@@ -20,7 +20,7 @@ void SyncServer::Connection::stop() {
     m_socket.close(err);
 }
 
-void SyncServer::Connection::isClosed()
+bool SyncServer::Connection::isClosed()
 {
     return !m_socket.is_open();
 }
@@ -28,7 +28,7 @@ void SyncServer::Connection::isClosed()
 void SyncServer::Connection::read_request()
 {
     if ( m_socket.available())
-        m_already_read += sock_.read_some(
+        m_already_read += m_socket.read_some(
                     buffer(m_buffer + m_already_read, bufferLength - m_already_read));
 }
 
@@ -89,7 +89,7 @@ void SyncServer::accept_thread()
     ip::tcp::acceptor acceptor(m_service, m_ep);
     while ( m_terminated ) {
         connection_ptr new_( new Connection(m_service));
-        acceptor.accept(new_->sock());
+        acceptor.accept(new_->socket());
 
         boost::recursive_mutex::scoped_lock lk(m_cs);
         m_clients.push_back(new_);

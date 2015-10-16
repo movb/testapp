@@ -16,7 +16,7 @@ public:
 
     struct Connection : boost::enable_shared_from_this<Connection> {
         Connection(boost::asio::io_service& io_service)
-            : sock_(io_service)
+            : m_socket(io_service)
         {
         }
 
@@ -25,7 +25,7 @@ public:
         boost::asio::ip::tcp::socket & socket() { return m_socket; }
 
         void stop();
-        void isClosed();
+        bool isClosed();
 
     private:
         void read_request();
@@ -63,7 +63,7 @@ private:
 
     std::atomic_bool m_terminated { false };
 
-    std::map<std::string, AbstractCommand> m_commandProcessors;
+    std::map<std::string, boost::shared_ptr<AbstractCommand>> m_commandProcessors;
 };
 
 #endif // SYNCSERVER_H
