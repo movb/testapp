@@ -60,11 +60,9 @@ void SyncServer::Connection::process_request()
              back_inserter(params));
     }
     else {
-        command = message.substr(0,message.size()-1);
+        //command = message.substr(0,message.size()-1);
+        command = message;
     }
-    std::cout << "Message: " << message << std::endl;
-    std::cout << "Message length: " << message.size() << std::endl;
-    std::cout << "Command is " << command << ", length is " << command.size() << std::endl;
 
     CommandProcessors::iterator it = m_commandProcessors.find(command);
     if(it != m_commandProcessors.end())
@@ -95,11 +93,8 @@ SyncServer::SyncServer(boost::shared_ptr<LedLight> ledLight, string ip, unsigned
 
 void SyncServer::run()
 {
-    std::cout << "Running accept\n";
     m_threads.create_thread(boost::bind(&SyncServer::accept_thread, this));
-    std::cout << "Running handle\n";
     m_threads.create_thread(boost::bind(&SyncServer::handle_clients_thread, this));
-    std::cout << "Running more\n";
 
     while( !m_terminated )
     {
