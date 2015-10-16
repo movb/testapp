@@ -1,9 +1,9 @@
 #include <iostream>
 
-#include "tcpserver.h"
+#include "syncserver.h"
 
 int main()
 {
-    std::cout << "Hello from server\n";
+    SyncServer("127.0.0.1", 2048);
     return 0;
 }
