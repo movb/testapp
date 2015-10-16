@@ -10,13 +10,20 @@
 
 #include "abstractcommand.h"
 
+using CommandPtr = boost::shared_ptr<AbstractCommand>;
+
 class SyncServer
 {
 public:
+    using CommandProcessors = std::map<std::string, CommandPtr>;
 
     struct Connection : boost::enable_shared_from_this<Connection> {
-        Connection(boost::asio::io_service& io_service)
-            : m_socket(io_service)
+        Connection(boost::asio::io_service& io_service,
+                   boost::shared_ptr<LedLight> ledLight,
+                   CommandProcessors& commandProcessors)
+            : m_socket(io_service),
+              m_ledLight(ledLight),
+              m_commandProcessors(commandProcessors)
         {
         }
 
@@ -39,21 +46,28 @@ public:
         int m_already_read { 0 };
         char m_buffer[bufferLength];
         bool m_started { false };
+
+        boost::shared_ptr<LedLight> m_ledLight;
+        CommandProcessors m_commandProcessors;
     };
+
     using connection_ptr = boost::shared_ptr<Connection>;
     using clients_vector = std::vector<connection_ptr>;
 
-    SyncServer(std::string ip, unsigned int port);
+    SyncServer(boost::shared_ptr<LedLight> ledLight, std::string ip, unsigned int port);
 
     void run();
     void terminate();
 
-private:
+    void registerCommandProcessor(std::string name, boost::shared_ptr<AbstractCommand> processor);
 
+private:
     void handle_clients_thread();
     void accept_thread();
 
 private:
+    boost::shared_ptr<LedLight> m_ledLight;
+
     boost::thread_group m_threads;
     boost::asio::io_service m_service;
     boost::asio::ip::tcp::endpoint m_ep;
@@ -63,7 +77,7 @@ private:
 
     std::atomic_bool m_terminated { false };
 
-    std::map<std::string, boost::shared_ptr<AbstractCommand>> m_commandProcessors;
+    CommandProcessors m_commandProcessors;
 };
 
 #endif // SYNCSERVER_H

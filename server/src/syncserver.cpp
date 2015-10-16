@@ -1,9 +1,14 @@
+#include <sstream>
+#include <algorithm>
+#include <iterator>
+
 #include <boost/bind.hpp>
 
 #include "syncserver.h"
 
 using namespace boost::asio;
 using namespace boost::posix_time;
+using namespace std;
 
 void SyncServer::Connection::answer_to_client()
 {
@@ -34,36 +39,67 @@ void SyncServer::Connection::read_request()
 
 void SyncServer::Connection::process_request()
 {
-    bool command_end = std::find(m_buffer, m_buffer + m_already_read, '\n')
+    bool command_end = find(m_buffer, m_buffer + m_already_read, '\n')
                       < m_buffer + m_already_read;
     if ( !command_end)
         return;
 
-    size_t pos = std::find(m_buffer, m_buffer + m_already_read, '\n') - m_buffer;
-    std::string msg(m_buffer, pos);
-    std::copy(m_buffer + m_already_read, m_buffer + bufferLength, m_buffer);
+    size_t pos = find(m_buffer, m_buffer + m_already_read, '\n') - m_buffer;
+    string message(m_buffer, pos);
+    copy(m_buffer + m_already_read, m_buffer + bufferLength, m_buffer);
     m_already_read -= pos + 1;
 
-    if ( msg.find("hello") == 0) write("World!\n");
-    else write("unknown command\n");
+    string command;
+    list<string> params;
+    pos = message.find(' ');
+    if(pos != string::npos) {
+        command = message.substr(0,pos);
+        istringstream iss(message.substr(pos+1));
+        copy(istream_iterator<string>(iss),
+             istream_iterator<string>(),
+             back_inserter(params));
+    }
+    else {
+        command = message.substr(0,message.size()-1);
+    }
+    std::cout << "Message: " << message << std::endl;
+    std::cout << "Message length: " << message.size() << std::endl;
+    std::cout << "Command is " << command << ", length is " << command.size() << std::endl;
+
+    CommandProcessors::iterator it = m_commandProcessors.find(command);
+    if(it != m_commandProcessors.end())
+    {
+        // выполняем команду
+        write(it->second->processCommand(m_ledLight,params));
+    }
+    else if((it = m_commandProcessors.find("default")) != m_commandProcessors.end())
+    {
+        // если есть дефолтная команда
+        write(it->second->processCommand(m_ledLight,params));
+    }
+    // иначе ничего не делаем
 }
 
-void SyncServer::Connection::write(const std::__cxx11::string &msg)
+void SyncServer::Connection::write(const string &msg)
 {
-    m_socket.write_some(buffer(msg));
+    m_socket.write_some(buffer(msg + "\n"));
 }
 
 
-SyncServer::SyncServer(std::string ip, unsigned int port)
+SyncServer::SyncServer(boost::shared_ptr<LedLight> ledLight, string ip, unsigned int port)
     :
+      m_ledLight(ledLight),
       m_ep(ip::address::from_string(ip),port)
 {
 }
 
 void SyncServer::run()
 {
+    std::cout << "Running accept\n";
     m_threads.create_thread(boost::bind(&SyncServer::accept_thread, this));
+    std::cout << "Running handle\n";
     m_threads.create_thread(boost::bind(&SyncServer::handle_clients_thread, this));
+    std::cout << "Running more\n";
 
     while( !m_terminated )
     {
@@ -79,7 +115,7 @@ void SyncServer::handle_clients_thread()
         for ( clients_vector::iterator it = m_clients.begin(); it != m_clients.end(); ++it)
             (*it)->answer_to_client();
 
-        m_clients.erase(std::remove_if(m_clients.begin(), m_clients.end(),
+        m_clients.erase(remove_if(m_clients.begin(), m_clients.end(),
                    boost::bind(&Connection::isClosed,_1)), m_clients.end());
     }
 }
@@ -87,8 +123,8 @@ void SyncServer::handle_clients_thread()
 void SyncServer::accept_thread()
 {
     ip::tcp::acceptor acceptor(m_service, m_ep);
-    while ( m_terminated ) {
-        connection_ptr new_( new Connection(m_service));
+    while ( !m_terminated ) {
+        connection_ptr new_( new Connection(m_service, m_ledLight, m_commandProcessors));
         acceptor.accept(new_->socket());
 
         boost::recursive_mutex::scoped_lock lk(m_cs);
@@ -105,4 +141,9 @@ void SyncServer::terminate()
         (*it)->stop();
 
     m_threads.join_all();
+}
+
+void SyncServer::registerCommandProcessor(string name, boost::shared_ptr<AbstractCommand> processor)
+{
+    m_commandProcessors[name] = processor;
 }

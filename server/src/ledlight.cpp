@@ -8,26 +8,38 @@ LedLight::LedLight()
 
 void LedLight::setState(const std::string &state)
 {
+    State newState;
     if (state == "on") {
-        m_state = State::On;
+        newState = State::On;
     } else if (state == "off") {
-        m_state = State::Off;
+        newState = State::Off;
     } else {
         throw LedLightException("Unknow state " + state );
     }
+
+    if (newState == m_state)
+        throw LedLightException("State already is " + state );
+
+    m_state = newState;
 }
 
 void LedLight::setColor(const std::string &color)
 {
+    Color newColor;
     if (color == "red") {
-        m_color = Color::Red;
+        newColor = Color::Red;
     } else if (color == "green") {
-        m_color = Color::Green;
+        newColor = Color::Green;
     } else if (color == "blue") {
-        m_color = Color::Blue;
+        newColor = Color::Blue;
     } else {
         throw LedLightException("Unknow color " + color );
     }
+
+    if (newColor == m_color)
+        throw LedLightException("Color already is " + color );
+
+    m_color = newColor;
 }
 
 void LedLight::setRate(const std::string &rate)
@@ -41,6 +53,9 @@ void LedLight::setRate(const std::string &rate)
 
     if( rateNumber < minRate || rateNumber > maxRate )
         throw LedLightException("Rate " + rate + " not in 0..5 range");
+
+    if (rateNumber == m_rate)
+        throw LedLightException("Rate already is " + rate );
 
     m_rate = rateNumber;
 }
