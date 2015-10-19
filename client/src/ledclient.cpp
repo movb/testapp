@@ -19,8 +19,12 @@ LedClient::LedClient(std::string ip, unsigned int port)
 
 void LedClient::connect(std::string ip, unsigned int port)
 {
-    ip::tcp::endpoint ep( ip::address::from_string(ip), port);
-    m_socket.connect(ep);
+    try {
+        ip::tcp::endpoint ep( ip::address::from_string(ip), port);
+        m_socket.connect(ep);
+    } catch (boost::system::system_error & err) {
+        throw LedClientException(err.what());
+    }
 }
 
 std::string LedClient::sendCommand(const std::string &command)
@@ -32,7 +36,7 @@ std::string LedClient::sendCommand(const std::string &command)
              boost::bind(&LedClient::readComplete, this, _1, _2));
         return std::string(m_buffer, m_already_read);
     } catch (boost::system::system_error & err) {
-        throw LedClientException("Error");
+        throw LedClientException(err.what());
     }
 }
 

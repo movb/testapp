@@ -93,13 +93,8 @@ int main()
     LedClient client;
     try {
         client.connect("127.0.0.1", 2048);
-    } catch (boost::system::system_error & err) {
-        cout << "Cannot connect to server " << endl;
-        return -1;
-    }
 
-    Commands commands = prepareCommands();
-    try {
+        Commands commands = prepareCommands();
         while( true ) {
             pair<int,int> action = getAction(commands);
             if(action.first == -1)
@@ -110,8 +105,8 @@ int main()
 
                 cout << "Result: " << client.sendCommand(commandString) << endl;
         }
-    } catch (LedClientException& /*ex*/) {
-        cout << "Connection terminated" << endl;
+    } catch (LedClientException& ex) {
+        cout << "Connection error: " << ex.what() << endl;
     }
     cout << "Good bye!" << endl;
     return 0;
