@@ -45,7 +45,7 @@ void LedVisualizer::update(const boost::system::error_code & /*e*/,
                 clearScreen();
             }
 
-            t->expires_at(t->expires_at() + boost::posix_time::milliseconds(100/rate));
+            t->expires_at(t->expires_at() + boost::posix_time::milliseconds(1000/rate));
         }
         else {
             if(m_ledLight->getState() != "off" && isUpdated()) {
