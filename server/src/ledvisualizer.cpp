@@ -89,8 +89,11 @@ void LedVisualizer::printMessage()
 void LedVisualizer::clearScreen()
 {
     std::stringstream ss;
+
     for(int i=0;i<m_messageLength;++i)
-        ss << "\b";
+        ss << "\b \b";
+
+    //std::cout << "\e[A";
     std::cout << ss.str() << std::flush;
     m_messageLength = 0;
 }
