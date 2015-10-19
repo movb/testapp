@@ -37,7 +37,7 @@ void LedVisualizer::update(const boost::system::error_code & /*e*/,
         if(rate != 0 && m_ledLight->getState() == "on") {
             ++m_tickCount;
 
-            if(m_tickCount % rate == 0) {
+            if(m_tickCount % 2 == 0) {
                 printMessage();
                 m_tickCount = 0;
             }
@@ -45,7 +45,7 @@ void LedVisualizer::update(const boost::system::error_code & /*e*/,
                 clearScreen();
             }
 
-            t->expires_at(t->expires_at() + boost::posix_time::milliseconds(1000/rate));
+            t->expires_at(t->expires_at() + boost::posix_time::milliseconds(1000/(rate*2)));
         }
         else {
             if(isUpdated()) {
