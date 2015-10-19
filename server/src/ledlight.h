@@ -23,6 +23,7 @@ public:
     std::string getState();
     std::string getColor();
     std::string getRate();
+    short getRateInt();
 
 private:
     enum class State { On, Off };

@@ -83,3 +83,8 @@ std::string LedLight::getRate()
     return boost::lexical_cast<std::string>(m_rate);
 }
 
+short LedLight::getRateInt()
+{
+    return m_rate;
+}
+

@@ -99,17 +99,19 @@ int main()
     }
 
     Commands commands = prepareCommands();
-    while( true ) {
-        pair<int,int> action = getAction(commands);
-        if(action.first == -1)
-            break;
-        string commandString = commands[action.first].name;
-        if(action.second != -1)
-            commandString += " " + commands[action.first].params[action.second];
-        try {
-            cout << "Result: " << client.sendCommand(commandString) << endl;
-        } catch (LedClientException& /*ex*/) {
+    try {
+        while( true ) {
+            pair<int,int> action = getAction(commands);
+            if(action.first == -1)
+                break;
+            string commandString = commands[action.first].name;
+            if(action.second != -1)
+                commandString += " " + commands[action.first].params[action.second];
+
+                cout << "Result: " << client.sendCommand(commandString) << endl;
         }
+    } catch (LedClientException& /*ex*/) {
+        cout << "Connection terminated" << endl;
     }
     cout << "Good bye!" << endl;
     return 0;
