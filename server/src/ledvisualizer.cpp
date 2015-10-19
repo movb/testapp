@@ -77,8 +77,17 @@ bool LedVisualizer::isUpdated()
 void LedVisualizer::printMessage()
 {
     std::stringstream ss;
+    ss << "\033[1;";
+    std::string color = m_ledLight->getColor();
+    if (color == "red")
+        ss << "31m";
+    else if(color == "green")
+        ss << "32m";
+    else if(color == "blue")
+        ss << "36m";
     ss << m_ledLight->getState() << " " << m_ledLight->getColor() << " "
        << m_ledLight->getRate();
+    ss << "\033[0m";
 
     std::string message = ss.str();
     m_messageLength = message.size();
