@@ -77,7 +77,7 @@ bool LedVisualizer::isUpdated(std::string state, std::string color, short rate)
     return updated;
 }
 
-void LedVisualizer::printMessage(std::__cxx11::string state, std::__cxx11::string color, short rate)
+void LedVisualizer::printMessage(std::string state, std::string color, short rate)
 {
     std::stringstream ss;
     ss << "\033[1;";

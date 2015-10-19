@@ -4,23 +4,25 @@
 #include <string>
 #include <initializer_list>
 #include <boost/lexical_cast.hpp>
+#include <boost/program_options.hpp>
 
 #include "ledclient.h"
 
 using namespace std;
+namespace po = boost::program_options;
 
 struct Command {
-    std::string name;
-    std::string description;
-    std::vector<std::string> params;
+    string name;
+    string description;
+    vector<string> params;
 
-    Command(const char* name, const char* description, std::initializer_list<std::string> list):
+    Command(const char* name, const char* description, initializer_list<string> list):
         name( name ), description ( description ), params(list)
     {
     }
 };
 
-using Commands = std::vector<Command>;
+using Commands = vector<Command>;
 
 Commands prepareCommands() {
     Commands commands;
@@ -88,11 +90,31 @@ pair<int,int> getAction(const Commands& commands) {
     }
 }
 
-int main()
+int main(int argc, char** argv)
 {
+    string host = "127.0.0.1";
+    unsigned int port = 2048;
+
+    po::options_description desc("Allowed options");
+    desc.add_options()
+        ("host", po::value<string>(), "server host")
+        ("port", po::value<unsigned int>(), "server port")
+    ;
+
+    po::variables_map vm;
+    po::store(po::parse_command_line(argc, argv, desc), vm);
+    po::notify(vm);
+
+    if(vm.count("host"))
+        host = vm["host"].as<string>();
+    if(vm.count("port"))
+        port = vm["port"].as<unsigned int>();
+
+    cout << "Connecting to " << host << " on port " << port << endl;
+
     LedClient client;
     try {
-        client.connect("127.0.0.1", 2048);
+        client.connect(host, port);
 
         Commands commands = prepareCommands();
         while( true ) {

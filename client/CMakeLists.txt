@@ -7,7 +7,7 @@ SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -ggdb3")
 SET(SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
 INCLUDE_DIRECTORIES("${SOURCE_DIR}")
 
-find_package( Boost REQUIRED COMPONENTS system thread)
+find_package( Boost REQUIRED COMPONENTS system thread program_options)
 include_directories( ${Boost_INCLUDE_DIRS} )
 
 FILE(GLOB_RECURSE SOURCES ${SOURCE_DIR}/*.cpp ${SOURCE_DIR}/*.h)
