@@ -62,7 +62,9 @@ void LedLight::setRate(const std::string &rate)
 
 std::string LedLight::getState()
 {
-    if(m_state == State::On)
+    State state = m_state;
+
+    if(state == State::On)
         return "on";
     else
         return "off";
@@ -70,11 +72,13 @@ std::string LedLight::getState()
 
 std::string LedLight::getColor()
 {
-    if(m_color == Color::Red)
+    Color color = m_color;
+
+    if(color == Color::Red)
         return "red";
-    else if (m_color == Color::Green)
+    else if (color == Color::Green)
         return "green";
-    else if (m_color == Color::Blue)
+    else if (color == Color::Blue)
         return "blue";
 }
 

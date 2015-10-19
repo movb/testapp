@@ -33,28 +33,33 @@ void LedVisualizer::update(const boost::system::error_code & /*e*/,
 {
     if(! m_terminated ) {
         short rate = m_ledLight->getRateInt();
+        std::string state = m_ledLight->getState();
+        std::string color = m_ledLight->getColor();
 
-        if(rate != 0 && m_ledLight->getState() == "on") {
+        if(rate != 0 && state == "on") {
             ++m_tickCount;
 
+            clearScreen();
             if(m_tickCount % 2 == 0) {
-                printMessage();
+                printMessage(state, color, rate);
                 m_tickCount = 0;
-            }
-            else {
-                clearScreen();
             }
 
             t->expires_at(t->expires_at() + boost::posix_time::milliseconds(1000/(rate*2)));
         }
         else {
-            if(isUpdated()) {
+            if(isUpdated(state, color, rate))
                 clearScreen();
-                if(m_ledLight->getState() != "off")
-                    printMessage();
-            }
+
+            if((state == "on" && m_messageLength == 0))
+                printMessage(state, color, rate);
+
             t->expires_at(t->expires_at() + boost::posix_time::milliseconds(100));
         }
+
+        m_previousState = state;
+        m_previousRate = rate;
+        m_previousColor = color;
 
         t->async_wait(boost::bind(&LedVisualizer::update,
                                  this,
@@ -63,31 +68,26 @@ void LedVisualizer::update(const boost::system::error_code & /*e*/,
     }
 }
 
-bool LedVisualizer::isUpdated()
+bool LedVisualizer::isUpdated(std::string state, std::string color, short rate)
 {
-    bool updated = m_previousColor != m_ledLight->getColor() ||
-            m_previousState != m_ledLight->getState() ||
-            m_previousRate != m_ledLight->getRate();
-    m_previousState = m_ledLight->getState();
-    m_previousRate = m_ledLight->getRate();
-    m_previousColor = m_ledLight->getColor();
+    bool updated = m_previousColor != color ||
+            m_previousState != state ||
+            m_previousRate != rate;
 
     return updated;
 }
 
-void LedVisualizer::printMessage()
+void LedVisualizer::printMessage(std::__cxx11::string state, std::__cxx11::string color, short rate)
 {
     std::stringstream ss;
     ss << "\033[1;";
-    std::string color = m_ledLight->getColor();
     if (color == "red")
         ss << "31m";
     else if(color == "green")
         ss << "32m";
     else if(color == "blue")
         ss << "36m";
-    ss << m_ledLight->getState() << " " << m_ledLight->getColor() << " "
-       << m_ledLight->getRate();
+    ss << state << " " << color << " " << rate;
     ss << "\033[0m";
 
     std::string message = ss.str();
@@ -103,7 +103,6 @@ void LedVisualizer::clearScreen()
     for(int i=0;i<m_messageLength;++i)
         ss << "\b \b";
 
-    //std::cout << "\e[A";
     std::cout << ss.str() << std::flush;
     m_messageLength = 0;
 }
