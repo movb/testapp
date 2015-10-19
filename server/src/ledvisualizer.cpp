@@ -32,11 +32,6 @@ void LedVisualizer::update(const boost::system::error_code & /*e*/,
                            boost::asio::deadline_timer *t)
 {
     if(! m_terminated ) {
-        /*
-        std::cout << m_ledLight->getState() << " " << m_ledLight->getColor() << " "
-                  << m_ledLight->getRate() << std::endl;
-                  */
-
         short rate = m_ledLight->getRateInt();
 
         if(rate != 0 && m_ledLight->getState() == "on") {
@@ -47,10 +42,10 @@ void LedVisualizer::update(const boost::system::error_code & /*e*/,
                 m_tickCount = 0;
             }
             else {
-                //clearScreen();
+                clearScreen();
             }
 
-            t->expires_at(t->expires_at() + boost::posix_time::milliseconds(1000/rate));
+            t->expires_at(t->expires_at() + boost::posix_time::milliseconds(100/rate));
         }
         else {
             if(m_ledLight->getState() != "off" && isUpdated()) {
@@ -69,9 +64,9 @@ void LedVisualizer::update(const boost::system::error_code & /*e*/,
 
 bool LedVisualizer::isUpdated()
 {
-    bool updated = m_previousColor == m_ledLight->getColor() &&
-            m_previousState == m_ledLight->getState() &&
-            m_previousRate == m_ledLight->getRate();
+    bool updated = m_previousColor != m_ledLight->getColor() ||
+            m_previousState != m_ledLight->getState() ||
+            m_previousRate != m_ledLight->getRate();
     m_previousState = m_ledLight->getState();
     m_previousRate = m_ledLight->getRate();
     m_previousColor = m_ledLight->getColor();
@@ -83,12 +78,12 @@ void LedVisualizer::printMessage()
 {
     std::stringstream ss;
     ss << m_ledLight->getState() << " " << m_ledLight->getColor() << " "
-       << m_ledLight->getRate() << std::endl;
+       << m_ledLight->getRate();
 
     std::string message = ss.str();
     m_messageLength = message.size();
 
-    std::cout << message;
+    std::cout << message << std::flush;
 }
 
 void LedVisualizer::clearScreen()
@@ -96,7 +91,7 @@ void LedVisualizer::clearScreen()
     std::stringstream ss;
     for(int i=0;i<m_messageLength;++i)
         ss << "\b";
-    std::cout << ss.str();
+    std::cout << ss.str() << std::flush;
     m_messageLength = 0;
 }
 
